@@ -29,7 +29,9 @@ def get_semantic_model(model_name: str, **kwargs) -> Segmentation_Model:
             "Found no available semantic models. Did you set one up by downloading modelweights and putting them into the folder specified by the env variable or did you want to specify with an absolute path instead?",
             Log_Type.FAIL,
         )
-        raise KeyError(model_name)
+        raise KeyError(model_name) 
+    # for debugging
+    print(possible_keys)
     if model_name not in possible_keys:
         logger.print(f"Model with name {model_name} does not exist, options are {possible_keys}", Log_Type.FAIL)
         raise KeyError(model_name)
@@ -54,6 +56,8 @@ def get_instance_model(model_name: str, **kwargs) -> Segmentation_Model:
             Log_Type.FAIL,
         )
         raise KeyError(model_name)
+    # for debugging
+    print(possible_keys)
     if model_name not in possible_keys:
         logger.print(f"Model with name {model_name} does not exist, options are {possible_keys}", Log_Type.FAIL)
         raise KeyError(model_name)

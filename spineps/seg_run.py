@@ -307,7 +307,7 @@ def process_img_nii(  # noqa: C901
         save_softmax_logits (bool, optional): If true, additionally saves the softmax logits (averaged over folds) as an npz. Defaults to False.
         save_log_data (bool, optional): If true, will save the log to a file. Defaults to True.
 
-        override_semantic (bool, optional): If true, will redo existing semantic segmentations. Defaults to False.
+        override_semantic (bool, optional): If true, will redo existing semproc_pad_sizeantic segmentations. Defaults to False.
         override_instance (bool, optional): If true, will redo existing instance segmentations. Defaults to False.
         override_ctd (bool, optional): If true, will redo existing cetnroid files. Defaults to False.
 
@@ -379,6 +379,9 @@ def process_img_nii(  # noqa: C901
 
     start_time = perf_counter()
     file_dir = img_ref.file["nii.gz"]
+
+    # Inject debugger 
+    print("Inject Report: ", input_ref, )
 
     logger.print("Processing", file_dir.name)
     with logger:

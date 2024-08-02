@@ -9,8 +9,10 @@ from spineps.seg_model import Segmentation_Model
 from spineps.seg_pipeline import fill_holes_labels, logger
 from spineps.utils.proc_functions import clean_cc_artifacts, n4_bias
 
+# Inject our lightning modules
 
-def predict_semantic_mask(
+
+def predict_semantic_mask_custom(
     mri_nii: NII,
     model: Segmentation_Model,
     debug_data: dict,

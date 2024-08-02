@@ -71,10 +71,12 @@ def parser_arguments(parser: argparse.ArgumentParser):
 
 @citation_reminder
 def entry_point():
+    # Loading model - can be injected, will inject
     modelids_semantic = list(modelid2folder_semantic().keys())
     modelids_instance = list(modelid2folder_instance().keys())
     ###########################
     ###########################
+    # Parsing argument
     main_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     cmdparsers = main_parser.add_subparsers(title="cmd", help="Possible subcommands", dest="cmd", required=True)
     parser_sample = cmdparsers.add_parser(
@@ -99,7 +101,7 @@ def entry_point():
     parser_sample.add_argument(
         "-model_instance",
         "-mv",
-        # type=str.lower,
+        # type=str.lower
         default=None,
         # required=True,
         # choices=modelids_instance,
@@ -158,7 +160,7 @@ def entry_point():
         help="If true, saves the snapshots also in a separate folder in the dataset directory",
     )
     parser_dataset = parser_arguments(parser_dataset)
-    #
+    # Pleae understand all this arguments if you want to inject, and god it is a LOT
     ###########################
     opt = main_parser.parse_args()
 
