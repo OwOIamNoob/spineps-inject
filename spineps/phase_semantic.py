@@ -44,7 +44,7 @@ def predict_semantic_mask(
             verbose=verbose,
         )  # type:ignore
         seg_nii = results[OutputType.seg]
-        unc_nii = results.get(OutputType.unc, None)
+        # unc_nii = results.get(OutputType.unc, None)
         softmax_logits = results[OutputType.softmax_logits]
 
         logger.print("Post-process semantic mask...")
@@ -53,7 +53,7 @@ def predict_semantic_mask(
 
         if len(seg_nii.unique()) == 0:
             logger.print("Subregion mask is empty, skip this", Log_Type.FAIL)
-            return seg_nii, unc_nii, softmax_logits, ErrCode.EMPTY
+            return seg_nii, softmax_logits, ErrCode.EMPTY
 
         if proc_remove_inferior_beyond_canal:
             seg_nii = remove_nonsacrum_beyond_canal_height(seg_nii=seg_nii.copy())
@@ -98,7 +98,7 @@ def predict_semantic_mask(
         if proc_fill_3d_holes:
             seg_nii = seg_nii.fill_holes_(fill_holes_labels, verbose=logger)
 
-    return seg_nii, unc_nii, softmax_logits, ErrCode.OK
+    return seg_nii, softmax_logits, ErrCode.OK
 
 
 def remove_nonsacrum_beyond_canal_height(seg_nii: NII):
@@ -190,6 +190,4 @@ def overlap_slice(slice1: slice, slice2: slice):
     if slice2s > slice1s and slice2s <= slice1e:
         return True
 
-    if slice2s < slice1s and slice2e >= slice1s:
-        return True
-    return False
+    return bool(slice2s < slice1s and slice2e >= slice1s)

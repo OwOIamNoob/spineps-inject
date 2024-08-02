@@ -36,7 +36,7 @@ def phase_postprocess_combined(
 ) -> tuple[NII, NII]:
     logger.print("Post process", Log_Type.STAGE)
     with logger:
-        seg_nii.assert_affine(shape=vert_nii.shape)
+        seg_nii.assert_affine(other=vert_nii)
         # Post process semantic mask
         ###################
         vert_nii = vert_nii.copy()
@@ -44,13 +44,14 @@ def phase_postprocess_combined(
             n_vert_bodies = len(vert_nii.unique())
         if debug_data is None:
             debug_data = {}
-            #
 
         if proc_clean_inst_by_sem:
             vert_nii.apply_mask(seg_nii, inplace=True)
         crop_slices = seg_nii.compute_crop(dist=2)
-        vert_uncropped_arr = np.zeros(vert_nii.shape, dtype=seg_nii.dtype)
-        seg_uncropped_arr = np.zeros(vert_nii.shape, dtype=seg_nii.dtype)
+
+        # Save uncropped to uncrop later
+        vert_uncropped = vert_nii.copy()
+        seg_uncropped = seg_nii.copy()
 
         # Crop down
         vert_nii.apply_crop_(crop_slices)
@@ -82,31 +83,23 @@ def phase_postprocess_combined(
         #    whole_vert_nii_cleaned.map_labels_({i: i + 1 for i in vert_labels if i != 0}, verbose=verbose)
         logger.print(f"Labeled {len(vert_labels)} vertebra instances from top to bottom")
         vert_arr_cleaned = add_ivd_ep_vert_label(whole_vert_nii_cleaned, seg_nii_cleaned)
-        #
-        #
         vert_arr_cleaned[seg_nii_cleaned.get_seg_array() == v_name2idx["S1"]] = v_name2idx["S1"]
         ###############
         # Uncrop
 
-        vert_uncropped_arr[crop_slices] = vert_arr_cleaned
-        whole_vert_nii_cleaned.set_array_(vert_uncropped_arr, verbose=False)
-        #
-        seg_uncropped_arr[crop_slices] = seg_nii_cleaned.get_seg_array()
-
-        seg_nii_cleaned.set_array_(seg_uncropped_arr, verbose=False)
-        #
-        debug_data["vert_arr_crop_e_addivd"] = whole_vert_nii_cleaned.copy()
+        vert_uncropped[crop_slices] = vert_arr_cleaned
+        seg_uncropped[crop_slices] = seg_nii_cleaned.get_seg_array()
 
         # subreg_nii_cleaned = vert_nii_cleaned.set_array(subreg_arr_cleaned, verbose=False)
         logger.print(
             "Vertebra whole_vert_nii_uncropped_backsampled",
-            whole_vert_nii_cleaned.zoom,
-            whole_vert_nii_cleaned.orientation,
-            whole_vert_nii_cleaned.shape,
+            vert_uncropped.zoom,
+            vert_uncropped.orientation,
+            vert_uncropped.shape,
             verbose=verbose,
         )
-        debug_data["vert_arr_return_final"] = whole_vert_nii_cleaned.copy()
-    return seg_nii_cleaned, whole_vert_nii_cleaned
+        debug_data["vert_arr_return_final"] = vert_uncropped.copy()
+    return seg_uncropped, vert_uncropped
 
 
 def mask_cleaning_other(
