@@ -1,0 +1,72 @@
+─────────────────────────────── Thank you for using SPINEPS ───────────────────────────────
+                         Please support our development by citing                          
+                      GitHub: https://github.com/Hendrik-code/spineps                      
+                          ArXiv: https://arxiv.org/abs/2402.16368                          
+                                         Thank you!                                        
+───────────────────────────────────────────────────────────────────────────────────────────
+
+[0m[*] Check available models...[0m[0m
+usage: spineps sample [-h] -input INPUT [-model_semantic] [-model_instance]
+                      [-der_name] [-save_debug] [-save_unc_img]
+                      [-save_softmax_logits] [-save_modelres_mask]
+                      [-override_semantic] [-override_instance]
+                      [-override_postpair] [-override_ctd]
+                      [-ignore_inference_compatibility] [-nocrop] [-non4]
+                      [-cpu] [-run_cprofiler] [-verbose]
+
+options:
+  -h, --help            show this help message and exit
+  -input INPUT, -i INPUT
+                        path to the input nifty file (default: None)
+  -model_semantic , -ms 
+                        The model used for the semantic segmentation. Choices
+                        are ['t1w_segmentor', 't2w_segmentor_2.0'] or a string
+                        absolute path the model folder (default: None)
+  -model_instance , -mv 
+                        The model used for the vertebra instance segmentation.
+                        Choices are ['inst_vertebra_3.0'] or a string absolute
+                        path the model folder (default: None)
+  -der_name , -dn       Name of the derivatives folder (default:
+                        derivatives_seg)
+  -save_debug, -sd      Saves a lot of debug data and intermediate results
+                        (default: False)
+  -save_unc_img, -sui   Saves a uncertainty image from the subreg prediction
+                        (default: False)
+  -save_softmax_logits, -ssl
+                        Saves an .npz containing the softmax logit outputs of
+                        the semantic mask (default: False)
+  -save_modelres_mask, -smrm
+                        If true, will additionally save the semantic mask in
+                        the resolution used by the model (default: False)
+  -override_semantic, -os
+                        Will override existing seg-spine files (default:
+                        False)
+  -override_instance, -oi
+                        Will override existing seg-vert files (True if
+                        semantic mask changed) (default: False)
+  -override_postpair, -opp
+                        Will override existing cleaned files (True if either
+                        semantic or instance mask changed) (default: False)
+  -override_ctd, -oc    Will override existing centroid files (True if the
+                        instance mask changed) (default: False)
+  -ignore_inference_compatibility, -iic
+                        Does not skip input masks that do not match the models
+                        modalities (default: False)
+  -nocrop, -nc          Does not crop input before semantically segmenting.
+                        Can improve the segmentation a little but depending on
+                        size costs more computation time (default: False)
+  -non4                 Does not apply n4 bias field correction (default:
+                        False)
+  -cpu                  Use CPU instead of GPU (will take way longer)
+                        (default: False)
+  -run_cprofiler, -rcp  Runs a cprofiler over the entire action (default:
+                        False)
+  -verbose, -v          Prints much more stuff, may fully clutter your
+                        terminal (default: False)
+─────────────────────────────── Thank you for using SPINEPS ───────────────────────────────
+                         Please support our development by citing                          
+                      GitHub: https://github.com/Hendrik-code/spineps                      
+                          ArXiv: https://arxiv.org/abs/2402.16368                          
+                                         Thank you!                                        
+───────────────────────────────────────────────────────────────────────────────────────────
+

@@ -27,6 +27,8 @@ from spineps.seg_utils import (
 from spineps.utils.citation_reminder import citation_reminder
 
 
+
+
 @citation_reminder
 def process_dataset(
     dataset_path: Path,
@@ -112,12 +114,13 @@ def process_dataset(
     if not isinstance(modalities, list):
         modalities = [modalities]
     assert len(modalities) > 0, "you must specifiy the modalities to be segmented!"
-
+    # snapshot image folder 
     if snapshot_copy_folder is True:
         snapshot_copy_folder = dataset_path.joinpath("snaps_seg")
     elif snapshot_copy_folder is False:
         snapshot_copy_folder = None
 
+    # Initiate semantic model if there isnt one
     if model_semantic is None:
         model_semantic = [find_best_matching_model(m, expected_resolution=None) for m in modalities]
         logger.print("Found matching models:")
@@ -145,9 +148,13 @@ def process_dataset(
 
     # RUN
     bids_ds = BIDS_Global_info(datasets=[dataset_path], parents=[rawdata_name, derivative_name], verbose=False)
+    # debugging
+    print(bids_ds)
+    
     n_subjects = len(bids_ds)
     logger.print(f"Found {n_subjects} Subjects in {dataset_path}, parents={bids_ds.parents}")
 
+    # Debugging queue
     processed_seen_counter = 0
     processed_alldone_counter = 0
     processed_counter = 0
@@ -160,7 +167,9 @@ def process_dataset(
         if name == "unsorted" and not ignore_bids_filter:
             logger.print("Unsorted, will skip")
             continue
+        # Enumerate ???
         for idx, mod_pair in enumerate(modalities):
+            print(mod_pair)
             model = model_semantic[idx]
             allowed_format = Modality.format_keys(mod_pair[0])
             allowed_acq = Acquisition.format_keys(mod_pair[1])
@@ -174,7 +183,10 @@ def process_dataset(
                 q.filter_non_existence("lesions", required=True)
                 q.filter_non_existence("label", required=True)
                 q.filter("acq", lambda x: x in allowed_acq, required=False)  # noqa: B023
+            
+            # list of paths to images
             scans = q.loop_list(sort=True)  # TODO make it family to allow for multi-inputs
+            
             for s in scans:
                 output_paths, errcode = process_img_nii(
                     img_ref=s,
@@ -221,6 +233,7 @@ def process_dataset(
         if subject_scan_processed == 0:
             logger.print(f"Subject {s_idx+1}: {name} had no scans to be processed")
 
+    # Post logging scheme
     logger.print()
     logger.print(f"Processed {processed_seen_counter} scans with {modalities}", Log_Type.BOLD)
     (
@@ -325,6 +338,7 @@ def process_img_nii(  # noqa: C901
     output_paths = output_paths_from_input(
         img_ref, derivative_name, snapshot_copy_folder, input_format=input_format, non_strict_mode=ignore_bids_filter
     )
+    # Config output path, may add some tweaks
     out_spine = output_paths["out_spine"]
     out_spine_raw = output_paths["out_spine_raw"]
     out_vert = output_paths["out_vert"]
@@ -339,6 +353,7 @@ def process_img_nii(  # noqa: C901
     if isinstance(snapshot_copy_folder, Path):
         snapshot_copy_folder.mkdir(parents=True, exist_ok=True)
 
+    # Check existing output
     if (
         out_spine.exists()
         and out_vert.exists()
@@ -352,7 +367,8 @@ def process_img_nii(  # noqa: C901
     ):
         logger.print(f"{out_spine.name}: Outputs are all already created and no override set, will skip")
         return output_paths, ErrCode.ALL_DONE
-
+        
+    # Prepare
     out_raw.mkdir(parents=True, exist_ok=True)
     done_something = False
     debug_data_run: dict[str, NII] = {}
@@ -368,13 +384,17 @@ def process_img_nii(  # noqa: C901
     file_dir = img_ref.file["nii.gz"]
 
     # Inject debugger 
-    print("Inject Report: ", input_ref, )
+    print("Inject Report: ", img_ref, file_dir)
 
     logger.print("Processing", file_dir.name)
     with logger:
         if verbose:
             model_semantic.logger.default_verbose = True
+        
+        # Read image from here
         input_nii = img_ref.open_nii()
+        
+        # All of this just for logging the profile ????? 
         input_package = InputPackage(
             input_nii,
             pad_size=proc_pad_size,
@@ -383,6 +403,7 @@ def process_img_nii(  # noqa: C901
 
         # First stage
         if not out_spine_raw.exists() or override_semantic:
+            # phase_pre.py
             input_preprocessed, errcode = preprocess_input(
                 input_nii,
                 pad_size=input_package.pad_size,
@@ -394,7 +415,7 @@ def process_img_nii(  # noqa: C901
             if errcode != ErrCode.OK:
                 logger.print("Got Error from preprocessing", Log_Type.FAIL)
                 return output_paths, errcode
-            # make subreg mask
+            # make subreg mask, phase_semantic
             assert input_preprocessed is not None
             seg_nii_modelres, softmax_logits, errcode = predict_semantic_mask(
                 input_preprocessed,
@@ -406,9 +427,10 @@ def process_img_nii(  # noqa: C901
                 proc_clean_beyond_largest_bounding_box=proc_sem_clean_beyond_largest_bounding_box,
                 proc_remove_inferior_beyond_canal=proc_sem_remove_inferior_beyond_canal,
             )
+
             if errcode != ErrCode.OK:
                 return output_paths, errcode
-
+            # Log outputs 
             assert isinstance(seg_nii_modelres, NII), "subregion segmentation is not a NII!"
             logger.print("seg_nii out", seg_nii_modelres.zoom, seg_nii_modelres.orientation, seg_nii_modelres.shape, verbose=verbose)
             if np_count_nonzero(seg_nii_modelres.get_seg_array()) == 0:
@@ -429,7 +451,7 @@ def process_img_nii(  # noqa: C901
             seg_nii_modelres = NII.load(out_spine_raw, seg=True)
             print("seg_nii", seg_nii_modelres.zoom, seg_nii_modelres.orientation, seg_nii_modelres.shape)
 
-        # Second stage
+        # Second stage, phase_instance
         if not out_vert_raw.exists() or override_instance:
             whole_vert_nii, errcode = predict_instance_mask(
                 seg_nii_modelres.copy(),
@@ -467,6 +489,7 @@ def process_img_nii(  # noqa: C901
             seg_nii_back.assert_affine(other=input_nii)
 
             # use both seg_raw and vert_raw to clean each other, add ivd_ep ...
+            # phase_post
             seg_nii_clean, vert_nii_clean = phase_postprocess_combined(
                 seg_nii=seg_nii_back,
                 vert_nii=whole_vert_nii,
@@ -478,6 +501,7 @@ def process_img_nii(  # noqa: C901
                 verbose=verbose,
             )
 
+            # Gonna check this function
             seg_nii_clean.assert_affine(shape=vert_nii_clean.shape, zoom=vert_nii_clean.zoom, orientation=vert_nii_clean.orientation)
             vert_nii_clean.assert_affine(other=input_nii)
             # input_package.make_nii_from_this(seg_nii_clean)
@@ -490,7 +514,7 @@ def process_img_nii(  # noqa: C901
             seg_nii_clean = NII.load(out_spine, seg=True)
             vert_nii_clean = NII.load(out_vert, seg=True)
 
-        # Centroid
+        # Centroid detection, in seg_pipeline
         if not out_ctd.exists() or done_something or override_ctd:
             ctd = predict_centroids_from_both(
                 vert_nii_clean,
@@ -533,7 +557,7 @@ def process_img_nii(  # noqa: C901
     logger.print(f"Pipeline took: {perf_counter() - start_time}", Log_Type.OK, verbose=log_inference_time)
     return output_paths, ErrCode.OK
 
-
+# Get file prefix for writing to file system
 def output_paths_from_input(
     img_ref: BIDS_FILE,
     derivative_name: str,

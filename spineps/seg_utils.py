@@ -1,6 +1,6 @@
 # from utils.predictor import nnUNetPredictor
 import nibabel as nib
-from TPTBox import BIDS_FILE, NII, ZOOMS, Log_Type
+from TPTBox import BIDS_FILE, NII, Zooms, Log_Type
 
 from spineps.seg_enums import Acquisition, Modality
 from spineps.seg_model import Segmentation_Model
@@ -51,7 +51,7 @@ class InputPackage:
 
 def find_best_matching_model(
     modality_pair: Modality_Pair,
-    expected_resolution: ZOOMS | None,  # actual resolution here?
+    expected_resolution: Zooms | None,  # actual resolution here?
 ) -> Segmentation_Model:
     raise NotImplementedError("find_best_matching_model()")
     logger.print(expected_resolution)

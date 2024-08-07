@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from TPTBox import AX_CODES, ZOOMS, Location, Log_Type, Logger_Interface, v_name2idx
+from TPTBox import Ax_Codes, Zooms, Location, Log_Type, Logger_Interface, v_name2idx
 
 from spineps.seg_enums import Acquisition, InputType, Modality, ModelType
 
@@ -16,10 +16,10 @@ class Segmentation_Inference_Config:
         modality: str | list[str],
         acquisition: str,
         modeltype: str,
-        model_expected_orientation: AX_CODES,
+        model_expected_orientation: Ax_Codes,
         available_folds: int,
         inference_augmentation: bool,
-        resolution_range: ZOOMS | tuple[ZOOMS, ZOOMS],
+        resolution_range: Zooms | tuple[Zooms, Zooms],
         default_step_size: float,
         labels: dict,
         expected_inputs: list[InputType | str] = [InputType.img],  # noqa: B006
@@ -32,7 +32,7 @@ class Segmentation_Inference_Config:
         self.modalities: list[Modality] = [Modality[m] for m in modality]
         self.acquisition: Acquisition = Acquisition[acquisition]
         self.modeltype: ModelType = ModelType[modeltype]
-        self.model_expected_orientation: AX_CODES = tuple(model_expected_orientation)  # type:ignore
+        self.model_expected_orientation: Ax_Codes = tuple(model_expected_orientation)  # type:ignore
         self.resolution_range = resolution_range
         self.available_folds: int = int(available_folds)
         self.inference_augmentation: bool = inference_augmentation

@@ -34,6 +34,8 @@ def predict_semantic_mask(
     Returns:
         tuple[NII | None, NII | None, NII | None, np.ndarray, ErrCode]: seg_nii, seg_nii_modelres, unc_nii, softmax_logits, ErrCode
     """
+
+    # Since we need post processing of semantic, either we implement on local service, or we split the stage into sub-stages
     logger.print("Predict Semantic Mask", Log_Type.STAGE)
     with logger:
         results = model.segment_scan(
@@ -47,6 +49,7 @@ def predict_semantic_mask(
         # unc_nii = results.get(OutputType.unc, None)
         softmax_logits = results[OutputType.softmax_logits]
 
+        # Split the stage here :) 
         logger.print("Post-process semantic mask...")
 
         debug_data["sem_raw"] = seg_nii.copy()
@@ -84,7 +87,8 @@ def predict_semantic_mask(
                 verbose=verbose,
             )
 
-        # Do two iterations of both processing if enabled to make sure
+        # Do two iterations of both processing if enabled to make sure ????
+        # Why ???
         if proc_remove_inferior_beyond_canal:
             seg_nii = remove_nonsacrum_beyond_canal_height(seg_nii=seg_nii.copy())
 
@@ -191,3 +195,65 @@ def overlap_slice(slice1: slice, slice2: slice):
         return True
 
     return bool(slice2s < slice1s and slice2e >= slice1s)
+
+
+if __name__ == "__main__":
+    # Import minimal dependencies for easier configuration
+    from pathlib import Path
+    from typing import Dict
+    from TPTBox import BIDS_FILE
+    from spineps.models import get_semantic_model
+    # Workflow
+    from spineps.phase_pre import preprocess_input
+
+    # prepare sample in spineps protocol
+    input_path = Path("/home/k66/spineps/spineps/data/160_t2.nii.gz")
+    parent = input_path.parent
+    input_path = str(input_path)
+    bids_sample = BIDS_FILE(input_path, dataset=parent, verbose = True)
+    img = bids_sample.open_nii()
+    
+    # Originally, the segmentation output will be in favor to training phase, 
+    # We will have to cache original specs for inverse transformation.
+    # Code found in seg_model 157-168 code block
+
+    orig_shape = img.shape 
+    orientation = img.orientation
+    zms = img.zoom
+
+    # Debug logger 
+    debug_data: Dict[str, NII] = {}
+
+    # get semantic model 
+    model = get_semantic_model("t2w_segmentor_2.0", use_cpu=False).load()
+
+    # preprocess as step 1. 
+    pre_processed, err = preprocess_input(img, 
+                                                pad_size=4,
+                                                debug_data= debug_data,
+                                                proc_crop_input=False,
+                                                proc_do_n4_bias_correction=True,
+                                                verbose=True
+                                                )
+
+    print(pre_processed.get_array().shape)
+    assert err == ErrCode.OK, print("Preprocessing failed!")
+
+    # Step 2
+    semantic_seg, logits, err = predict_semantic_mask(  pre_processed, 
+                                                        model,
+                                                        debug_data= debug_data,
+                                                        verbose=True,
+                                                        proc_fill_3d_holes=True,
+                                                        proc_clean_small_cc_artifacts=True,
+                                                        proc_clean_beyond_largest_bounding_box=True,
+                                                        proc_remove_inferior_beyond_canal=True)
+
+    assert err == ErrCode.OK, print("Segmentation failed !")
+    
+    # export semantic_segmentation
+    semantic_seg.reorient_(orientation, verbose=True).rescale_(zms, verbose=True)
+    semantic_seg.pad_to(orig_shape, inplace=True)
+    print("Saving semantic region")
+    semantic_seg.save("/home/k66/spineps/spineps/data/160_t2_seg.nii.gz",verbose=True)
+

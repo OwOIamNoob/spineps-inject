@@ -497,13 +497,13 @@ def collect_vertebra_predictions(
     seg_nii_for_cut: NII = seg_nii.copy().map_labels_(
         {
             41: 1,
-            42: 2,
-            43: 3,
-            44: 4,
-            45: 5,
-            46: 6,
-            47: 7,
-            48: 8,
+            42: 1,
+            43: 1,
+            44: 1,
+            45: 1,
+            46: 1,
+            47: 1,
+            48: 1,
             49: 9,
             Location.Spinal_Cord.value: 0,
             Location.Spinal_Canal.value: 0,
@@ -513,6 +513,8 @@ def collect_vertebra_predictions(
         },
         verbose=False,
     )
+
+    # For injection, tried to re-map, or not mapping at all. 
     # print("seg_nii_for_cut", seg_nii_for_cut.shape)
 
     logger.print("Vertebra collect in", seg_nii.zoom, seg_nii.orientation, seg_nii.shape, verbose=verbose)

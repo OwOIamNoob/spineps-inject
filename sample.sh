@@ -1,5 +1,5 @@
 #!/bin/bash
-input=/home/k66/spinalcordtoolbox/data/data_spinalcord-segmentation/t2.nii.gz
+input=/home/k66/spineps/spineps/data/160_t2.nii.gz
 echo $input
 python spineps/entrypoint.py sample  -i $input \
                                         -ms t2w_segmentor_2.0 \

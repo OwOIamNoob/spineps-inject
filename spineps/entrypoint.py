@@ -17,7 +17,7 @@ logger = No_Logger(prefix="Init")
 def parser_arguments(parser: argparse.ArgumentParser):
     parser.add_argument("-der_name", "-dn", type=str, default="derivatives_seg", metavar="", help="Name of the derivatives folder")
     parser.add_argument("-save_debug", "-sd", action="store_true", help="Saves a lot of debug data and intermediate results")
-    # parser.add_argument("-save_unc_img", "-sui", action="store_true", help="Saves a uncertainty image from the subreg prediction")
+    parser.add_argument("-save_unc_img", "-sui", action="store_true", help="Saves a uncertainty image from the subreg prediction")
     parser.add_argument(
         "-save_softmax_logits", "-ssl", action="store_true", help="Saves an .npz containing the softmax logit outputs of the semantic mask"
     )
@@ -65,7 +65,7 @@ def parser_arguments(parser: argparse.ArgumentParser):
 
 @citation_reminder
 def entry_point():
-    # Loading model - can be injected, will inject
+    # Loading available models from checkpoint folder, will inject
     modelids_semantic = list(modelid2folder_semantic().keys())
     modelids_instance = list(modelid2folder_instance().keys())
     ###########################
@@ -105,7 +105,10 @@ def entry_point():
     parser_sample = parser_arguments(parser_sample)
 
     ###########################
-    #
+    # A lil notation: 
+    #   - Subreg - subregion = semantic model
+    #   - Vert - Vertebrae = Instance model
+
     model_subreg_choices = ["auto", *modelids_semantic]
     model_vert_choices = ["auto", *modelids_instance]
     parser_dataset.add_argument(
@@ -152,11 +155,13 @@ def entry_point():
         help="If true, saves the snapshots also in a separate folder in the dataset directory",
     )
     parser_dataset = parser_arguments(parser_dataset)
+
     # Pleae understand all this arguments if you want to inject, and god it is a LOT
     ###########################
     opt = main_parser.parse_args()
     print(opt)
-    # print(opt)
+    
+    # A lil conditional, but run_dataset just a iterations of run_sample anyways 
     if opt.cmd == "sample":
         run_sample(opt)
     elif opt.cmd == "dataset":
@@ -167,20 +172,25 @@ def entry_point():
 
 @citation_reminder
 def run_sample(opt: Namespace):
+    # Interactive path object
     input_path = Path(opt.input)
     dataset = str(input_path.parent)
     assert os.path.exists(dataset), f"-input parent does not exist, got {dataset}"  # noqa: PTH110
     assert dataset not in ("", "."), f"-input you only gave a filename, not a direction to the file, got {input_path}"
+    
     input_path = str(input_path)
+    
     if not input_path.endswith(".nii.gz"):
         input_path += ".nii.gz"
     assert os.path.isfile(input_path), f"-input does not exist or is not a file, got {input_path}"  # noqa: PTH113
 
     if "/" in str(opt.model_semantic):
-        # given path
+        # given path, and available semantic models, will need to add custom/user-defined semantic/instance pipeline
         model_semantic = get_segmentation_model(opt.model_semantic, use_cpu=opt.cpu).load()
     else:
         model_semantic = get_semantic_model(opt.model_semantic, use_cpu=opt.cpu).load()
+
+    # Need to inject here 
     if "/" in str(opt.model_instance):
         model_instance = get_segmentation_model(opt.model_instance, use_cpu=opt.cpu).load()
     else:
@@ -208,6 +218,7 @@ def run_sample(opt: Namespace):
         "verbose": opt.verbose,
     }
 
+    # Will need to inject process behaviour
     start_time = perf_counter()
     if opt.run_cprofiler:
         from TPTBox.logger.log_file import format_time_short, get_time

@@ -1,0 +1,35 @@
+/home/k66/spinalcordtoolbox/data/data_spinalcord-segmentation/t2.nii.gz
+─────────────────────────────── Thank you for using SPINEPS ───────────────────────────────
+                         Please support our development by citing                          
+                      GitHub: https://github.com/Hendrik-code/spineps                      
+                          ArXiv: https://arxiv.org/abs/2402.16368                          
+                                         Thank you!                                        
+───────────────────────────────────────────────────────────────────────────────────────────
+
+[0m[*] Check available models...[0m[0m
+['t1w_segmentor', 't2w_segmentor_2.0']
+[0m[*] Model loaded from /home/k66/spineps/spineps/models/T2w_Segmentor_2.0[0m[0m
+['inst_vertebra_3.0']
+[0m[*] Model loaded from /home/k66/spineps/spineps/models/Inst_Vertebra_3.0[0m[0m
+[0m[SPINEPS] Processing t2.nii.gz[0m[0m
+[0m - [SPINEPS] Input image (0.8000004, 0.8, 0.8) ('R', 'A', 'S') (64, 320, 320)[0m[0m
+[44m - [SPINEPS] Prepare input image[0m[0m
+[0m ---- [SPINEPS] Shifted from range (0, 4095) to range (0, 4095)[0m[0m
+[0m ---- [SPINEPS] Crop down from (64, 320, 320) to (64, 320, 320)[0m[0m
+[0m ---- [SPINEPS] N4 Bias field correction done in 23.358927202993073 sec[0m[0m
+[0m ---- [SPINEPS] Shifted from range (0, 4368) to range (0, 1500)[0m[0m
+[0m ---- [SPINEPS] Uncrop back from (64, 320, 320) to (64, 320, 320)[0m[0m
+[0m ---- [SPINEPS] Padded from (64, 320, 320) to (72, 328, 328)[0m[0m
+[44m - [SPINEPS] Predict Semantic Mask[0m[0m
+[0m ---- [ ] Image reoriented from ('R', 'A', 'S') to ('P', 'I', 'R')[0m[0m
+[0m ---- [ ] Image resampled from (0.8, 0.8, 0.8000004) to voxel size (0.75, 0.75, 1.65)[0m[0m
+[0m ---- [*] input (0.75, 0.75, 1.65) ('P', 'I', 'R') (350, 350, 35)[0m[0m
+Prediction with perform_everything_on_gpu=True failed due to insufficient GPU memory. Falling back to perform_everything_on_gpu=False. Not a big deal, just slower...
+Error:
+─────────────────────────────── Thank you for using SPINEPS ───────────────────────────────
+                         Please support our development by citing                          
+                      GitHub: https://github.com/Hendrik-code/spineps                      
+                          ArXiv: https://arxiv.org/abs/2402.16368                          
+                                         Thank you!                                        
+───────────────────────────────────────────────────────────────────────────────────────────
+

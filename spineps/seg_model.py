@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from torch import from_numpy
-from TPTBox import NII, ZOOMS, Image_Reference, Log_Type, Logger, No_Logger, to_nii
+from TPTBox import NII, Zooms, Image_Reference, Log_Type, Logger, No_Logger, to_nii
 from typing_extensions import Self
 
 from spineps.seg_enums import Acquisition, InputType, Modality, ModelType, OutputType
@@ -74,14 +74,14 @@ class Segmentation_Model(ABC):
         """
         return self
 
-    def calc_recommended_resampling_zoom(self, input_zoom: ZOOMS) -> ZOOMS:
+    def calc_recommended_resampling_zoom(self, input_zoom: Zooms) -> Zooms:
         """Calculates the resolution a corresponding input should be resampled to for this model
 
         Args:
-            input_zoom (ZOOMS): _description_
+            input_zoom (Zooms): _description_
 
         Returns:
-            ZOOMS: _description_
+            Zooms: _description_
         """
         if len(self.inference_config.resolution_range) != 2:
             return self.inference_config.resolution_range
@@ -94,7 +94,7 @@ class Segmentation_Model(ABC):
         )
         return output_zoom
 
-    def same_modelzoom_as_model(self, model: Self, input_zoom: ZOOMS) -> bool:
+    def same_modelzoom_as_model(self, model: Self, input_zoom: Zooms) -> bool:
         self_zms = self.calc_recommended_resampling_zoom(input_zoom=input_zoom)
         model_zms = model.calc_recommended_resampling_zoom(input_zoom=self_zms)
         match: bool = bool(np.all([self_zms[i] - model_zms[i] < 1e-4 for i in range(3)]))
@@ -143,7 +143,7 @@ class Segmentation_Model(ABC):
         orientation = None
         zms = None
         input_niftys_in_order = []
-        zms_pir: ZOOMS = None  # type: ignore
+        zms_pir: Zooms = None  # type: ignore
         for id in self.inference_config.expected_inputs:  # noqa: A001
             # Make nifty
             nii = to_nii(inputdict[id], seg=id == InputType.seg)
@@ -240,7 +240,7 @@ class Segmentation_Model(ABC):
             return name
         return self.inference_config.log_name
 
-    def dict_representation(self, input_zms: ZOOMS | None):
+    def dict_representation(self, input_zms: Zooms | None):
         info = {
             "name": self.modelid(),  # self.inference_config.__repr__()
             "model_path": str(self.model_folder),
